@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QApplication
 import sys
-from minesweeper.minesweeper import MineSweeper
+from minesweeper.qtclasses import MineSweeper
 
 if __name__=='__main__':
     app = QApplication(sys.argv)
