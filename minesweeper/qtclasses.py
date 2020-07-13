@@ -108,9 +108,7 @@ class Gui_Board(QWidget):
         if (i, j) in self.new_board.mines:
             if self.firstClick:
                 while (i, j) in self.new_board.mines:
-                    print("Mine on the first click")
                     self.new_board = Board(self.mines_number, self.x_board, self.y_board)
-                    print(self.new_board.mines)
             else:
                 self.gameOver.emit()
                 self.lockButton = True
@@ -130,6 +128,7 @@ class Gui_Board(QWidget):
                 name = "X"
             else:
                 name = str(name)
+
             label = QLabel(name)
             label.setFixedSize(35, 35)
             label.setAlignment(PyQt5.QtCore.Qt.AlignCenter)
@@ -139,7 +138,7 @@ class Gui_Board(QWidget):
                 label.setStyleSheet(
                     "QLabel{{background-color:transparent; border:1px solid grey; font:14pt ;{0};}}".format(self.COLOR[str(name)]))
             self.grid.addWidget(label, *(x, y))
-            if empty is True:
+            if empty:
                 for i in range(x-1, x+2):
                     for j in range(y-1, y+2):
                         try:
@@ -151,8 +150,6 @@ class Gui_Board(QWidget):
                     self.btnRemoval(i, j)
 
     def flagAdded(self, value):
-        print(self.minesLeft)
-        print(value)
         if value == 0:
             self.minesLeft +=-1
         else:
@@ -164,17 +161,13 @@ class MineSweeper(QMainWindow):
     def __init__(self, parent=None):
         super(MineSweeper, self).__init__(parent)
         menu_bar = self.menuBar()
-        #file_menu = menu_bar.addMenu("&File")
-        #new_action = QAction('&New', self)
-        #new_action.triggered.connect(self.NewBoard)
-        #file_menu.addAction(new_action)
         centralWidg = QWidget(self)
         verticalLayout = QVBoxLayout(centralWidg)
         horizontalLayout = QHBoxLayout()
         self.setCentralWidget(centralWidg)
         scoreBoard = QLCDNumber(self)
         self.mineCount = QLCDNumber(self)
-        self.board = Gui_Board(99, 16, 30, self)
+        self.board = Gui_Board(12, 8, 8, self)
         resetBtn = QPushButton(self)
         resetBtn.clicked.connect(self.NewBoard)
         resetBtn.setText("Reset")
