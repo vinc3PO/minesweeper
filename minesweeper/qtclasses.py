@@ -7,10 +7,11 @@ from PyQt5.QtWidgets import (QWidget, QGridLayout, QPushButton, QApplication,QLa
                              QSpacerItem)
 import PyQt5.QtCore
 from PyQt5.QtCore import pyqtSignal
-
+from minesweeper.logic import Board
 
 
 class Button(QPushButton):
+    flagSignal = pyqtSignal(int)
     def __init__(self, parent=None):
         super(Button, self).__init__()
         self.state = 0
@@ -26,8 +27,10 @@ class Button(QPushButton):
         self.state += 1
         if self.state == 1:
             self.setText("F")
+            self.flagSignal.emit(0)
         elif self.state == 2:
             self.setText("?")
+            self.flagSignal.emit(1)
         else:
             self.setText("")
             self.state = 0
@@ -48,10 +51,12 @@ class Gui_Board(QWidget):
     }
     gameOver = pyqtSignal()
 
-    def __init__(self, mines_number, x_board, y_board):
+    def __init__(self, mines_number, x_board, y_board, parent=None):
         super().__init__()
         self.new_board = Board(mines_number, x_board, y_board)
+        self.parent = parent
         self.mines_number = mines_number
+        self.minesLeft = self.mines_number
         self.x_board = x_board
         self.y_board = y_board
         self.lockButton = False
@@ -75,12 +80,15 @@ class Gui_Board(QWidget):
             button.setFixedSize(35,35)
             button.setObjectName('{!s},{!s}'.format(i, j))
             button.clicked.connect(self.btnClicked)
+            button.flagSignal.connect(self.flagAdded)
             #button.setAlignment(PyQt5.QtCore.Qt.AlignCenter)
             #button.setStyleSheet("QLabel{background-color:transparent; border:1px solid grey};")
             self.grid.setColumnMinimumWidth(j,15)
             self.grid.setRowMinimumHeight(i,15)
             self.grid.addWidget(button, *(i, j))
         self.grid.setSpacing(0)
+        self.minesLeft = self.mines_number
+        self.parent.mineCount.display(self.minesLeft)
     
     def refresh(self):
         for i in reversed(range(self.grid.count())):
@@ -142,6 +150,14 @@ class Gui_Board(QWidget):
                 for (i, j) in self.new_board.mines:
                     self.btnRemoval(i, j)
 
+    def flagAdded(self, value):
+        print(self.minesLeft)
+        print(value)
+        if value == 0:
+            self.minesLeft +=-1
+        else:
+            self.minesLeft +=1
+        self.parent.mineCount.display(self.minesLeft)
 
 
 class MineSweeper(QMainWindow):
@@ -156,13 +172,12 @@ class MineSweeper(QMainWindow):
         verticalLayout = QVBoxLayout(centralWidg)
         horizontalLayout = QHBoxLayout()
         self.setCentralWidget(centralWidg)
-        self.board = Gui_Board(99, 16, 30)
+        scoreBoard = QLCDNumber(self)
+        self.mineCount = QLCDNumber(self)
+        self.board = Gui_Board(99, 16, 30, self)
         resetBtn = QPushButton(self)
         resetBtn.clicked.connect(self.NewBoard)
         resetBtn.setText("Reset")
-        scoreBoard = QLCDNumber(self)
-        self.mineCount = QLCDNumber(self)
-        self.mineCount.display("99")
         spacer1 = QSpacerItem(0,0,PyQt5.QtWidgets.QSizePolicy.MinimumExpanding,PyQt5.QtWidgets.QSizePolicy.Minimum)
         spacer2 = QSpacerItem(0, 0, PyQt5.QtWidgets.QSizePolicy.MinimumExpanding, PyQt5.QtWidgets.QSizePolicy.Minimum)
         horizontalLayout.addWidget(self.mineCount)
@@ -180,7 +195,7 @@ class MineSweeper(QMainWindow):
 
         
     def NewBoard(self):
-        self.close()
+        #self.close()
         self.board.refresh()
 
     def gameOver(self):
