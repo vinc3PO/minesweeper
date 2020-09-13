@@ -26,7 +26,6 @@ class Board:
         # First create list of mines
 
     def setListMines(self):
-        print("mine list")
         minesCoord = []
         while len(minesCoord) < self.minesCount:
             col = random.randint(0, self.colCount - 1)
@@ -47,7 +46,6 @@ class Board:
             for x in range(-1, 2):
                 surrounding.append((col + x, row + y))
         number_mine = set(surrounding) & set(self.mines)
-        print(len(number_mine))
         return len(number_mine)
 
     def getMinesAround(self, col, row):
