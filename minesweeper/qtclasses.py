@@ -51,6 +51,8 @@ class Gui_Board(QWidget):
     }
     gameOver = pyqtSignal()
     gameStart = pyqtSignal()
+    mineleft = pyqtSignal(int)
+    gameWin = pyqtSignal()
 
     def __init__(self, mines_number, size, parent=None):
         super().__init__()
@@ -104,6 +106,7 @@ class Gui_Board(QWidget):
         position = self.sender().objectName().split(",")
         i = int(position[0])
         j = int(position[1])
+        done = False
         if (i, j) in self.new_board.mines:
             if self.firstClick:
                 while (i, j) in self.new_board.mines:
@@ -111,10 +114,23 @@ class Gui_Board(QWidget):
             else:
                 self.gameOver.emit()
                 self.lockButton = True
+                done = True
         self.btnRemoval(i, j)
         if self.firstClick:
             self.gameStart.emit()
-        self.firstClick = False
+            self.firstClick = False
+        if not done and self.countButtonLeft() == self.mines_number:
+            self.gameWin.emit()
+
+    def countButtonLeft(self):
+        count = 0
+        for i in range(self.grid.count()):
+            try:
+                if isinstance(self.grid.itemAt(i).widget(), QPushButton):
+                    count +=1
+            except:
+                print(sys.exc_info())
+        return count
 
     def btnRemoval(self, x, y):
         widg = self.grid.itemAtPosition(x, y).widget()
@@ -155,7 +171,8 @@ class Gui_Board(QWidget):
             self.minesLeft +=-1
         else:
             self.minesLeft +=1
-        self.parent.mineCount.display(self.minesLeft)
+        self.mineleft.emit(self.minesLeft)
+        #self.parent.mineCount.display(self.minesLeft)
 
 
 class MineSweeper(QMainWindow):
@@ -224,7 +241,8 @@ class MineSweeper(QMainWindow):
     def boardSignals(self):
         self.board.gameOver.connect(self.gameOver)
         self.board.gameStart.connect(self.timerStart)
-
+        self.board.mineleft.connect(self.updateMine)
+        self.board.gameWin.connect(self.winner)
 
     def newBoard(self):
         sender = self.sender().objectName()
@@ -252,12 +270,15 @@ class MineSweeper(QMainWindow):
 
 
     def gameOver(self):
-        #message = QMessageBox(self)
-        #message.setText("Game is OVER in {} second".format(self.timer.elapsed()/1000))
-        #message.show()
         self.status_bar.showMessage("GAME OVER in {} second".format(self.timer.elapsed()/1000))
         self.clock.stop()
         print("Game is OVER in {}".format(self.timer.elapsed()))
+
+    def winner(self):
+        message = QMessageBox(self)
+        self.clock.stop()
+        message.setText("Congratulation!\nDone in {} seconds".format(self.timer.elapsed()/1000))
+        message.show()
 
     def timerStart(self):
         self.clock.start(1000)
@@ -269,6 +290,9 @@ class MineSweeper(QMainWindow):
 
     def clearClock(self):
         self.scoreBoard.display(0)
+
+    def updateMine(self, mine):
+        self.mineCount.display(mine)
 
 def main():
     #b = Board(40,16,16)
