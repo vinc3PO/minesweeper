@@ -65,11 +65,9 @@ class Gui_Board(QWidget):
         self.grid = None
         self.topLayout = QHBoxLayout()
         resetButton = QPushButton()
+        #todo add smiley face
         resetButton.setText('Reset')
-        self.firstClick = True
         self.initUI()
-
-
         
     def initUI(self):
         if self.grid is None:
@@ -83,44 +81,34 @@ class Gui_Board(QWidget):
             button.setObjectName('{!s},{!s}'.format(i, j))
             button.clicked.connect(self.btnClicked)
             button.flagSignal.connect(self.flagAdded)
-            #button.setAlignment(PyQt5.QtCore.Qt.AlignCenter)
-            #button.setStyleSheet("QLabel{background-color:transparent; border:1px solid grey};")
             self.grid.setColumnMinimumWidth(j,15)
             self.grid.setRowMinimumHeight(i,15)
             self.grid.addWidget(button, *(i, j))
         self.grid.setSpacing(0)
         self.minesLeft = self.mines_number
-        self.parent.mineCount.display(self.minesLeft)
-    
-    def refresh(self):
-        for i in reversed(range(self.grid.count())):
-            try:
-                self.grid.itemAt(i).widget().setParent(None)
-            except:
-                print(sys.exc_info())
-        self.new_board = Board(self.mines_number,self.x_board,self.y_board)
-        self.initUI()
-        self.lockButton = False
 
-    def btnClicked(self):
-        position = self.sender().objectName().split(",")
-        i = int(position[0])
-        j = int(position[1])
-        done = False
-        if (i, j) in self.new_board.mines:
+    def btnClicked(self, i=None, j=None):
+        if not i and not j:
+            i, j = (int(i) for i in self.sender().objectName().split(","))
+        if (i, j) not in self.new_board.mines:
+            self.btnRemoval(i, j)
             if self.firstClick:
+                self.gameStart.emit()
+                self.firstClick = False
+            if self.countButtonLeft() == self.mines_number:
+                self.gameWin.emit()
+        else:
+            if self.firstClick:
+                # No mine in the first click
                 while (i, j) in self.new_board.mines:
                     self.new_board = Board(self.mines_number, self.x_board, self.y_board)
+                self.btnClicked(i,j)
             else:
+                self.btnRemoval(i, j)
                 self.gameOver.emit()
                 self.lockButton = True
-                done = True
-        self.btnRemoval(i, j)
-        if self.firstClick:
-            self.gameStart.emit()
-            self.firstClick = False
-        if not done and self.countButtonLeft() == self.mines_number:
-            self.gameWin.emit()
+                self.btnRemoval(i, j)
+
 
     def countButtonLeft(self):
         count = 0
@@ -137,12 +125,11 @@ class Gui_Board(QWidget):
         if widg is not None and isinstance(widg, QLabel) is False:
             widg.setParent(None)
             name = self.new_board.board[y][x]
-            empty = False
             if name == 0:
                 name = " "
                 empty = True
             elif name == 9:
-                name = "X"
+                name = "X" # meaning that is a bomb
             else:
                 name = str(name)
 
@@ -155,14 +142,18 @@ class Gui_Board(QWidget):
                 label.setStyleSheet(
                     "QLabel{{background-color:transparent; border:1px solid grey; font:14pt ;{0};}}".format(self.COLOR[str(name)]))
             self.grid.addWidget(label, *(x, y))
-            if empty:
+            try:
+                empty
                 for i in range(x-1, x+2):
                     for j in range(y-1, y+2):
                         try:
                             self.btnRemoval(i, j)
                         except:
                             pass
+            except:
+                pass
             if (x, y) in self.new_board.mines:
+                "clear all the mine when blew up."
                 for (i, j) in self.new_board.mines:
                     self.btnRemoval(i, j)
 
@@ -172,8 +163,6 @@ class Gui_Board(QWidget):
         else:
             self.minesLeft +=1
         self.mineleft.emit(self.minesLeft)
-        #self.parent.mineCount.display(self.minesLeft)
-
 
 class MineSweeper(QMainWindow):
     def __init__(self, parent=None):
@@ -236,6 +225,8 @@ class MineSweeper(QMainWindow):
         self.setWindowTitle('Minesweeper')
         self.setFixedSize(self.sizeHint())
         self.boardSignals()
+        self.mineCount.display(self.mines)
+
 
 
     def boardSignals(self):
@@ -266,8 +257,7 @@ class MineSweeper(QMainWindow):
         self.clock.stop()
         self.clearClock()
         self.status_bar.showMessage("")
-
-
+        self.mineCount.display(self.mines)
 
     def gameOver(self):
         self.status_bar.showMessage("GAME OVER in {} second".format(self.timer.elapsed()/1000))
@@ -295,13 +285,7 @@ class MineSweeper(QMainWindow):
         self.mineCount.display(mine)
 
 def main():
-    #b = Board(40,16,16)
-    #b.show()
-    #tuple_input_x = input("Enter x \n")
-    #tuple_input_y = input("enter y \n")
-    #print(b.find_surronding(int(tuple_input_x),int(tuple_input_y)))
     app = QApplication(sys.argv)
-    #app.setStyle("fusion")
     ex = MineSweeper()
     ex.show()
     app.exec_()
