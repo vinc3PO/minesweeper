@@ -22,6 +22,7 @@ class Button(QPushButton):
         self.parent = parent
 
     def mousePressEvent(self, QMouseEvent):
+
         if self.parent.lockButton is False:
             super(Button, self).mousePressEvent(QMouseEvent)
         if QMouseEvent.button() == 2 and self.parent.lockButton is False:
@@ -31,7 +32,7 @@ class Button(QPushButton):
         self.state += 1
         if self.state == 1:
             #self.setText("F")
-            self.setIcon(QIcon("D:\\Projects\\MineSweeper\\minesweeper\\resources\\flag.png"))
+            self.setIcon(QIcon(":icons/flag.png"))
             self.flagSignal.emit(0)
             self.setIconSize(self.rect().size())
         elif self.state == 2:
@@ -111,10 +112,10 @@ class Gui_Board(QWidget):
                     self.new_board = Board(self.mines_number, self.x_board, self.y_board)
                 self.btnClicked(i,j)
             else:
-                self.btnRemoval(i, j)
+                self.btnRemoval(i, j, firstBomb=True)
+                self.flagClearing()
                 self.gameOver.emit()
                 self.lockButton = True
-                self.btnRemoval(i, j)
 
 
     def countButtonLeft(self):
@@ -127,7 +128,7 @@ class Gui_Board(QWidget):
                 print(sys.exc_info())
         return count
 
-    def btnRemoval(self, x, y):
+    def btnRemoval(self, x, y, loop=None, firstBomb=None):
         widg = self.grid.itemAtPosition(x, y).widget()
         if widg is not None and isinstance(widg, QLabel) is False:
             widg.setParent(None)
@@ -150,6 +151,8 @@ class Gui_Board(QWidget):
             label.setAlignment(PyQt5.QtCore.Qt.AlignCenter)
             if name == " " or len(name) > 2:
                 label.setStyleSheet("QLabel{background-color:transparent;font:14pt ; border:1px solid grey;}")
+                if firstBomb is not None:
+                    label.setStyleSheet("QLabel{background-color:red;font:14pt ; border:1px solid grey;}")
             else:
                 label.setStyleSheet(
                     "QLabel{{background-color:transparent; border:1px solid grey; font:14pt ;{0};}}".format(self.COLOR[str(name)]))
@@ -164,10 +167,17 @@ class Gui_Board(QWidget):
                             pass
             except:
                 pass
-            if (x, y) in self.new_board.mines:
+
+            if (x, y) in self.new_board.mines and loop is None:
+                print("minessssssssssss")
                 "clear all the mine when blew up."
                 for (i, j) in self.new_board.mines:
-                    self.btnRemoval(i, j)
+                    try:
+                        if self.grid.itemAtPosition(i, j).widget().state !=1:
+                            self.btnRemoval(i, j, loop=True)
+                    except:
+                        print(sys.exc_info())
+                        pass
 
     def flagAdded(self, value):
         if value == 0:
@@ -175,6 +185,16 @@ class Gui_Board(QWidget):
         else:
             self.minesLeft +=1
         self.mineleft.emit(self.minesLeft)
+
+    def flagClearing(self):
+        for i in range(self.x_board):
+            for j in range(self.y_board):
+                try:
+                    if self.grid.itemAtPosition(i,j).widget().state ==1 and (i, j) not in self.new_board.mines:
+                        self.grid.itemAtPosition(i, j).widget().setIcon(QIcon(":icons/flag_not.png"))
+                except:
+                    print(sys.exc_info())
+                    pass
 
 class MineSweeper(QMainWindow):
     def __init__(self, parent=None):
