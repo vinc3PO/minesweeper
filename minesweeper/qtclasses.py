@@ -5,9 +5,13 @@ import random
 from PyQt5.QtWidgets import (QWidget, QGridLayout, QPushButton, QApplication,QLabel,
                              QFrame, QMainWindow, QAction, QMenu, QLayout, QHBoxLayout, QVBoxLayout, QLCDNumber,
                              QSpacerItem, QMessageBox)
+from PyQt5.QtGui import QPixmap, QIcon
 import PyQt5.QtCore
 from PyQt5.QtCore import pyqtSignal, QElapsedTimer, QTimer
 from minesweeper.logic import Board
+import minesweeper.resources.resources
+
+
 
 
 class Button(QPushButton):
@@ -18,7 +22,7 @@ class Button(QPushButton):
         self.parent = parent
 
     def mousePressEvent(self, QMouseEvent):
-        if self.text() == "" and self.parent.lockButton is False:
+        if self.parent.lockButton is False:
             super(Button, self).mousePressEvent(QMouseEvent)
         if QMouseEvent.button() == 2 and self.parent.lockButton is False:
             self.changeText()
@@ -26,9 +30,12 @@ class Button(QPushButton):
     def changeText(self):
         self.state += 1
         if self.state == 1:
-            self.setText("F")
+            #self.setText("F")
+            self.setIcon(QIcon("D:\\Projects\\MineSweeper\\minesweeper\\resources\\flag.png"))
             self.flagSignal.emit(0)
+            self.setIconSize(self.rect().size())
         elif self.state == 2:
+            self.setIcon(QIcon())
             self.setText("?")
             self.flagSignal.emit(1)
         else:
@@ -128,15 +135,20 @@ class Gui_Board(QWidget):
             if name == 0:
                 name = " "
                 empty = True
-            elif name == 9:
-                name = "X" # meaning that is a bomb
+            elif name == "X":
+                name = ":/icons/bomb.png"
+                #name = "X" # meaning that is a bomb
             else:
                 name = str(name)
 
-            label = QLabel(name)
+            if len(name)> 2:
+                label = QLabel()
+                label.setPixmap(QPixmap(name))
+            else:
+                label = QLabel(name)
             label.setFixedSize(35, 35)
             label.setAlignment(PyQt5.QtCore.Qt.AlignCenter)
-            if name == " " or name == "X":
+            if name == " " or len(name) > 2:
                 label.setStyleSheet("QLabel{background-color:transparent;font:14pt ; border:1px solid grey;}")
             else:
                 label.setStyleSheet(
