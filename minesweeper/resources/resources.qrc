@@ -3,5 +3,8 @@
     <file>bomb.png</file>
     <file>flag.png</file>
     <file>flag_not.png</file>
+    <file>smileyFace.png</file>
+    <file>winFace.png</file>
+    <file>loseFace.png</file>
   </qresource>
 </RCC>

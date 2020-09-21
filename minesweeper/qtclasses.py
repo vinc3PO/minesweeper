@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import (QWidget, QGridLayout, QPushButton, QApplication,QLa
                              QSpacerItem, QMessageBox)
 from PyQt5.QtGui import QPixmap, QIcon
 import PyQt5.QtCore
-from PyQt5.QtCore import pyqtSignal, QElapsedTimer, QTimer
+from PyQt5.QtCore import pyqtSignal, QElapsedTimer, QTimer, QSize
 from minesweeper.logic import Board
 import minesweeper.resources.resources
 
@@ -124,8 +124,8 @@ class Gui_Board(QWidget):
             try:
                 if isinstance(self.grid.itemAt(i).widget(), QPushButton):
                     count +=1
-            except:
-                print(sys.exc_info())
+            except Exception:
+                pass
         return count
 
     def btnRemoval(self, x, y, loop=None, firstBomb=None):
@@ -163,20 +163,18 @@ class Gui_Board(QWidget):
                     for j in range(y-1, y+2):
                         try:
                             self.btnRemoval(i, j)
-                        except:
+                        except Exception:
                             pass
-            except:
+            except Exception:
                 pass
 
             if (x, y) in self.new_board.mines and loop is None:
-                print("minessssssssssss")
                 "clear all the mine when blew up."
                 for (i, j) in self.new_board.mines:
                     try:
                         if self.grid.itemAtPosition(i, j).widget().state !=1:
                             self.btnRemoval(i, j, loop=True)
-                    except:
-                        print(sys.exc_info())
+                    except Exception:
                         pass
 
     def flagAdded(self, value):
@@ -192,8 +190,7 @@ class Gui_Board(QWidget):
                 try:
                     if self.grid.itemAtPosition(i,j).widget().state ==1 and (i, j) not in self.new_board.mines:
                         self.grid.itemAtPosition(i, j).widget().setIcon(QIcon(":icons/flag_not.png"))
-                except:
-                    print(sys.exc_info())
+                except Exception:
                     pass
 
 class MineSweeper(QMainWindow):
@@ -235,15 +232,17 @@ class MineSweeper(QMainWindow):
         self.mines = 99
         self.boardSize=(16, 30)
         self.board = Gui_Board(self.mines, self.boardSize, self)
-        resetBtn = QPushButton(self)
-        resetBtn.clicked.connect(self.newBoard)
-        resetBtn.setText("Reset")
-        resetBtn.setObjectName('resetBtn')
+        self.resetBtn = QPushButton(self)
+        self.resetBtn.clicked.connect(self.newBoard)
+        #resetBtn.setText("Reset")
+        self.resetBtn.setIcon(QIcon(":icons/smileyFace.png"))
+        self.resetBtn.setIconSize(QSize(24, 24))
+        self.resetBtn.setObjectName('resetBtn')
         spacer1 = QSpacerItem(0,0,PyQt5.QtWidgets.QSizePolicy.MinimumExpanding,PyQt5.QtWidgets.QSizePolicy.Minimum)
         spacer2 = QSpacerItem(0, 0, PyQt5.QtWidgets.QSizePolicy.MinimumExpanding, PyQt5.QtWidgets.QSizePolicy.Minimum)
         horizontalLayout.addWidget(self.mineCount)
         horizontalLayout.addSpacerItem(spacer1)
-        horizontalLayout.addWidget(resetBtn)
+        horizontalLayout.addWidget(self.resetBtn)
         horizontalLayout.addSpacerItem(spacer2)
         horizontalLayout.addWidget(self.scoreBoard)
         verticalLayout.addLayout(horizontalLayout)
@@ -269,6 +268,7 @@ class MineSweeper(QMainWindow):
 
     def newBoard(self):
         sender = self.sender().objectName()
+        self.resetBtn.setIcon(QIcon(":icons/smileyFace.png"))
         if sender == "beginner":
             self.mines = 10
             self.boardSize = (8, 8)
@@ -294,11 +294,12 @@ class MineSweeper(QMainWindow):
     def gameOver(self):
         self.status_bar.showMessage("GAME OVER in {} second".format(self.timer.elapsed()/1000))
         self.clock.stop()
-        print("Game is OVER in {}".format(self.timer.elapsed()))
+        self.resetBtn.setIcon(QIcon(":icons/loseFace.png"))
 
     def winner(self):
         message = QMessageBox(self)
         self.clock.stop()
+        self.resetBtn.setIcon(QIcon(":icons/winFace.png"))
         message.setText("Congratulation!\nDone in {} seconds".format(self.timer.elapsed()/1000))
         message.show()
 
