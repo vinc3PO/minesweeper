@@ -15,6 +15,7 @@ class MineSweeper(QMainWindow):
         ###  --  Start with the menu bar  --  ###
         self.barMenu = self.menuBar()
         menu = QMenu("&File", self.barMenu)
+        QApplication.setWindowIcon(QIcon(":icons/icon.png"))
         beginner = QAction(menu)
         beginner.setText("&Beginner")
         beginner.setObjectName("beginner")

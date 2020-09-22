@@ -6,5 +6,6 @@
     <file>smileyFace.png</file>
     <file>winFace.png</file>
     <file>loseFace.png</file>
+    <file>icon.png</file>
   </qresource>
 </RCC>
