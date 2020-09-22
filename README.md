@@ -13,4 +13,4 @@ PyQt5 clone of the classic minesweeper
 * PyQt5
 
 ## Screenshot
-![alt text](https://github.com/vinc3PO/minesweeper/blob/master/resources/screenshot.PNG?raw=true)
+![alt text](https://github.com/vinc3PO/minesweeper/blob/master/minesweeper/resources/screenshot.PNG)
